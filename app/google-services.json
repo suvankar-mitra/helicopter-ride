@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1857583858",
+    "firebase_url": "https://helicopter-ride.firebaseio.com",
+    "project_id": "helicopter-ride",
+    "storage_bucket": "helicopter-ride.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1857583858:android:1c3df7fe7bf89242",
+        "android_client_info": {
+          "package_name": "net.net16.suvankar.helicopterride"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1857583858-i6s3g1vmuk0n1mhrtiirougviltvu1if.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM5MO89B2YKfHaEIWgcxEIuIig6a2GoNE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

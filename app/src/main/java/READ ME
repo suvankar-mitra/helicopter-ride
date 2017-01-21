@@ -1,0 +1,37 @@
+CARTOONY.wav <- https://www.partnersinrhyme.com/pir/free_music_loops.shtml
+landscape.png <- http://opengameart.org/content/seamless-hd-landscape-in-parts
+
+
+App ID: ca-app-pub-1300395620912543~6143221316
+Ad unit ID: ca-app-pub-1300395620912543/7619954511
+
+
+Git global setup
+
+git config --global user.name "Suvankar Mitra"
+git config --global user.email "suvankarmitra.me@gmail.com"
+
+Create a new repository
+
+git clone https://gitlab.com/suvankar-mitra/helicopter-ride.git
+cd helicopter-ride
+touch README.md
+git add README.md
+git commit -m "add README"
+git push -u origin master
+
+Existing folder
+
+cd existing_folder
+git init
+git remote add origin https://gitlab.com/suvankar-mitra/helicopter-ride.git
+git add .
+git commit
+git push -u origin master
+
+Existing Git repository
+
+cd existing_repo
+git remote add origin https://gitlab.com/suvankar-mitra/helicopter-ride.git
+git push -u origin --all
+git push -u origin --tags
