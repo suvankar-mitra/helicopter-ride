@@ -14,7 +14,10 @@ import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.SurfaceHolder;
+
+import com.google.android.gms.ads.InterstitialAd;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -32,10 +35,18 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
     private Player player;
     private BackgroundMusic backgroundMusic;
     private ArrayList<Missile> missiles;
-    private ArrayList<TopBorder> topBorders;
-    private ArrayList<BottomBorder> bottomBorders;
+    private ArrayList<TopWall> topWall;
+    private ArrayList<BottomWall> bottomWalls;
     private Explosion explosion;
     private Fuel fuel;
+
+    private final Bitmap fuelBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel, 107, 65);
+    private Bitmap gameStartBitMap = BitmapFactory.decodeResource(getResources(),R.drawable.start_game);
+    private Bitmap gameOverBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.game_over);
+    private Bitmap boomBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.boom,187,52);
+
+    private Drawable pauseBtn;
+    private Drawable playBtn;
 
     private long missileStartTimer;
     private long gameStartTime;
@@ -57,6 +68,8 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
     private int DEV_WIDTH;
     private int DEV_HEIGHT;
 
+    private Surface mSurface;
+
     private Random random = new Random(System.currentTimeMillis());
 
     private final String PREF = "helicopter_ride_pref_"+GameActivity.class.getName();
@@ -72,18 +85,24 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
             R.drawable.helicopter_5
     };
 
-    public GamePanel(Context context) {
-        super(context);
+    //AdMob Interstitial ad
+    InterstitialAd mInterstitialAd;
 
+    public GamePanel(Context context, InterstitialAd interstitialAd) {
+        super(context);
+        mInterstitialAd = interstitialAd;
         //add the callback to surface holder to intercept events
         getHolder().addCallback(this);
 
         //make gamepanel focusable to intercept events
         setFocusable(true);
+
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+
+        mSurface=holder.getSurface();
 
         DEV_WIDTH = getWidth();
         DEV_HEIGHT = getHeight();
@@ -107,7 +126,7 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
         for(int i=0; i<sprites.length;i++) {
             sprites[i] = Utility.getBitmapFromVectorDrawable(getContext(),svgs[i]);
         }
-        Bitmap levelUp = Utility.getBitmapFromVectorDrawable(getContext(), R.drawable.level_up, 291, 52);
+        Bitmap levelUp = Utility.getBitmapFromVectorDrawable(getContext(), R.drawable.level_up, 114, 31);
         player = new Player(PLAYER_WIDTH, PLAYER_HEIGHT, sprites, levelUp);
 
         //missiles
@@ -115,12 +134,23 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
         missileStartTimer = System.nanoTime();
 
         //borders
-        topBorders = new ArrayList<>();
-        bottomBorders = new ArrayList<>();
+        topWall = new ArrayList<>();
+        bottomWalls = new ArrayList<>();
 
         //fuel tank
         fuel = new Fuel(WIDTH, HEIGHT/2, FUEL_WIDTH, FUEL_HEIGHT,
                 Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel, 107, 65));
+
+        //pause button
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            pauseBtn = getResources().getDrawable(R.drawable.ic_pause_green,null);
+        else
+            pauseBtn = getResources().getDrawable(R.drawable.ic_pause_green);
+        //play button
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            playBtn = getResources().getDrawable(R.drawable.ic_play,null);
+        else
+            playBtn = getResources().getDrawable(R.drawable.ic_play);
 
         //update hi score from preferences - this will not be deleted even if the activity gets killed
         this.getPlayer().setHiscore(getContext().getSharedPreferences(PREF,MODE_PRIVATE).getInt("HISCORE",MODE_PRIVATE));
@@ -190,34 +220,23 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
                         backgroundMusic.pause();
                 }
                 Log.d("PAUSE","true");
+
+                System.gc();
+
                 return true;
             }
-
-            //mute the game when mute button on the left bottom clicked
-            //WIDTH-130, HEIGHT-50, WIDTH-85, HEIGHT-10
-            /*if(event.getX() >= DEV_WIDTH-130
-                    && event.getX() <= DEV_WIDTH-85
-                    && event.getY() >= DEV_HEIGHT - 50) {
-                Log.d("mute","muted");
-                if(!mute) {
-                    mute = true;
-                    if(backgroundMusic.isPlaying())
-                        backgroundMusic.pause();
-                }
-                else {
-                    mute = false;
-                    if(!backgroundMusic.isPlaying()) {
-                        backgroundMusic.play();
-                    }
-                }
-                return true;
-            }*/
 
             //if this is first time pressing just increment
             if(gameOver && touchCount<1){
                 touchCount++;
                 gameOver = true;
                 gameStarted = false;    //this is to show the Start Game image at the start
+
+                //showing AD
+                if(mInterstitialAd.isLoaded()) {
+                    Log.d("AD","Showing AD after destroy");
+                    mInterstitialAd.show();
+                }
             }
             //if we are starting after a game over
             else if(gameOver && touchCount==1) {
@@ -275,15 +294,6 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
     public void update() {
         if(player.isPlaying()) {
 
-            long gameElapsed = (System.nanoTime() - gameStartTime) / 1000000;
-            if(gameElapsed >= 60000) {
-                Log.d("GC","requesting gc");
-                System.gc();
-                gameStartTime = System.nanoTime();
-                random = null;
-                random = new Random(System.nanoTime());
-            }
-
             //update background
             background.update();
 
@@ -305,62 +315,28 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
                 fuel.update();
                 if(fuel.getX() <= -50){
                     int randomNum = random.nextInt(HEIGHT-100) + 45;
-                    fuel = new Fuel(WIDTH, randomNum, FUEL_WIDTH, FUEL_HEIGHT,
-                            Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel, 107, 65));
+                    fuel = new Fuel(WIDTH, randomNum, FUEL_WIDTH, FUEL_HEIGHT, fuelBitmap);
                 }
             }
             else {
                 int randomNum = random.nextInt(HEIGHT-100) + 45;
-                fuel = new Fuel(WIDTH, randomNum, FUEL_WIDTH, FUEL_HEIGHT,
-                        Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel, 107, 65));
+                fuel = new Fuel(WIDTH, randomNum, FUEL_WIDTH, FUEL_HEIGHT, fuelBitmap);
             }
             //if player got the fuel
             if(collision(player, fuel)) {
                 Log.d("FUEL","got fuel");
-                fuel = null;
+                int randomNum = random.nextInt(HEIGHT-100) + 45;
+                fuel = new Fuel(WIDTH, randomNum, FUEL_WIDTH, FUEL_HEIGHT, fuelBitmap);
                 player.setFuelGauge(player.getFuelGauge() + Player.FUEL_INCREASE);
             }
 
             //create missiles
-            long missileElapsed = (System.nanoTime() - missileStartTimer) / 1000000;
-            if(missileElapsed > 2000 - player.getScore()) {
-                //first missile at middle of screen
-                if(missiles.size()==0) {
-                    missiles.add(new Missile(BitmapFactory.decodeResource(getResources(),R.drawable.missile),
-                                                WIDTH+10, HEIGHT/2, 15, 45, player.getScore(), 13));    //13 missiles in bitmap
-                }
-                //next missiles at all different height
-                else {
-                    int randomNum = random.nextInt((HEIGHT-45 - 45) + 1) + 45;
-                    missiles.add(new Missile(BitmapFactory.decodeResource(getResources(),R.drawable.missile),
-                            WIDTH+10, randomNum, 15, 45, player.getScore(), 13));
-                }
-                missileStartTimer = System.nanoTime();
-            }
-            //update every missile object
-            for(int i=0; i<missiles.size(); i++) {
-                missiles.get(i).update();
-                //collision detection of helicopter and missile
-                if(collision(player, missiles.get(i))) {
-                    //eplosion
-                    explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
-                            player.getX()+30, player.getY()-30,100,100,25,boomBitmap);
-                    missiles.remove(i);
-
-                    destroy();
-
-                    break;
-                }
-                if(missiles.get(i).getX()<-60) {
-                    missiles.set(i,null);
-                    missiles.remove(i);
-                }
-            }
+            createAndUpdateMissiles();
 
             //udate top border
-            updateTopBorder();
+            createAndUpdateTopBorder();
             //update bottom border
-            updateBottomBorder();
+            createAndUpdateBottomBorder();
         }
 
         //explosion update
@@ -368,13 +344,10 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
             explosion.update();
     }
 
-    private Bitmap gameStartBitMap = BitmapFactory.decodeResource(getResources(),R.drawable.start_game);
-    private Bitmap gameOverBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.game_over);
-    private Bitmap boomBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.boom,187,52);
-
     @Override
     public void draw(Canvas canvas) {
         if(canvas != null) {
+
             //we need to scale the image according to the device
             final float scaleFactorX = ((float)getWidth()/WIDTH);
             final float scaleFactorY = (float)getHeight()/HEIGHT;
@@ -386,10 +359,10 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
             background.draw(canvas);
 
             //borders
-            for(TopBorder border: topBorders) {
+            for(TopWall border: topWall) {
                 border.draw(canvas);
             }
-            for(BottomBorder border: bottomBorders) {
+            for(BottomWall border: bottomWalls) {
                 border.draw(canvas);
             }
 
@@ -412,72 +385,18 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
             if(fuel !=null)
                 fuel.draw(canvas);
 
-            //score
-            Paint paint = new Paint();
-            paint.setColor(Color.WHITE);
-            paint.setTextSize(20);
-            paint.setAlpha(230);
-            paint.setTypeface(Typeface.MONOSPACE);
-            paint.setFakeBoldText(true);
-            canvas.drawText("Score: "+player.getScore(), WIDTH - 130, 20, paint);
-            //Fuel
-            paint = new Paint();
-            paint.setColor(Color.WHITE);
-            paint.setTextSize(20);
-            paint.setAlpha(230);
-            paint.setTypeface(Typeface.MONOSPACE);
-            paint.setFakeBoldText(true);
-            canvas.drawText("Fuel Gauge", 10, 20, paint);
-            //level
-            paint = new Paint();
-            paint.setColor(Color.WHITE);
-            paint.setTextSize(20);
-            paint.setAlpha(230);
-            paint.setTypeface(Typeface.MONOSPACE);
-            paint.setFakeBoldText(true);
-            canvas.drawText("Level: "+player.getLevel(), 10, HEIGHT - 10, paint);
-            //hi score
-            paint = new Paint();
-            paint.setColor(Color.WHITE);
-            paint.setTextSize(20);
-            paint.setAlpha(230);
-            paint.setTypeface(Typeface.MONOSPACE);
-            paint.setFakeBoldText(true);
-            canvas.drawText("Hi-Score: "+player.getHiscore(), WIDTH/2 - 55, 20, paint);
-            //pause button
-            Drawable pauseBtn;
+            //draw all stats on screen
+            drawScoreAndStats(canvas);
+
+            //play pause button
             if(player.isPlaying()) {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    pauseBtn = getResources().getDrawable(R.drawable.ic_pause_green,null);
-                else
-                    pauseBtn = getResources().getDrawable(R.drawable.ic_pause_green);
+                pauseBtn.setBounds(WIDTH-70, HEIGHT-70, WIDTH-5, HEIGHT-5);
+                pauseBtn.draw(canvas);
             }
             else {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    pauseBtn = getResources().getDrawable(R.drawable.ic_play,null);
-                else
-                    pauseBtn = getResources().getDrawable(R.drawable.ic_play);
+                playBtn.setBounds(WIDTH-70, HEIGHT-70, WIDTH-5, HEIGHT-5);
+                playBtn.draw(canvas);
             }
-            pauseBtn.setBounds(WIDTH-70, HEIGHT-70, WIDTH-5, HEIGHT-5);
-            pauseBtn.draw(canvas);
-
-            //mute button
-            /*Drawable muteBtn;
-            if(this.mute) {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    muteBtn = getResources().getDrawable(R.drawable.ic_volume_off_black,null);
-                else
-                    muteBtn = getResources().getDrawable(R.drawable.ic_volume_off_black);
-            }
-            else {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    muteBtn = getResources().getDrawable(R.drawable.ic_volume_up_black,null);
-                else
-                    muteBtn = getResources().getDrawable(R.drawable.ic_volume_up_black);
-            }
-            muteBtn.setBounds(WIDTH-130, HEIGHT-50, WIDTH-85, HEIGHT-10);
-            muteBtn.draw(canvas);*/
-
             if(gameOver && !player.isPlaying() && gameStarted) {
                 canvas.drawBitmap(gameOverBitmap, WIDTH/2 - 240, HEIGHT/2 - 40, null);
             }
@@ -488,6 +407,41 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
 
             canvas.restoreToCount(savedState);      //if we dont restore, it will scale up n up n up
         }
+    }
+
+    public void drawScoreAndStats(Canvas canvas) {
+        //score
+        Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(20);
+        paint.setAlpha(230);
+        paint.setTypeface(Typeface.MONOSPACE);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Score: "+player.getScore(), WIDTH - 130, 20, paint);
+        //Fuel
+        paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(20);
+        paint.setAlpha(230);
+        paint.setTypeface(Typeface.MONOSPACE);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Fuel Meter", 10, 20, paint);
+        //level
+        paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(20);
+        paint.setAlpha(230);
+        paint.setTypeface(Typeface.MONOSPACE);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Level: "+player.getLevel(), 10, HEIGHT - 10, paint);
+        //hi score
+        paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(20);
+        paint.setAlpha(230);
+        paint.setTypeface(Typeface.MONOSPACE);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Hi-Score: "+player.getHiscore(), WIDTH/2 - 55, 20, paint);
     }
 
     public boolean collision(GameObject a, GameObject b) {
@@ -508,60 +462,97 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
             backgroundMusic.pause();
         //set hi score
         setHiscore();
+
+        System.gc();
     }
 
-    public void updateBottomBorder() {
-        if(bottomBorders.size()==0) {
-            bottomBorders.add(new BottomBorder(BitmapFactory.decodeResource(getResources(),R.drawable.brick),
+    public void createAndUpdateMissiles() {
+        long missileElapsed = (System.nanoTime() - missileStartTimer) / 1000000;
+        if(missileElapsed > 2000 - player.getScore()) {
+            //first missile at middle of screen
+            if(missiles.size()==0) {
+                missiles.add(new Missile(BitmapFactory.decodeResource(getResources(),R.drawable.missile),
+                        WIDTH+10, HEIGHT/2, 15, 45, player.getScore(), 13));    //13 missiles in bitmap
+            }
+            //next missiles at all different height
+            else {
+                int randomNum = random.nextInt((HEIGHT-45 - 45) + 1) + 45;
+                missiles.add(new Missile(BitmapFactory.decodeResource(getResources(),R.drawable.missile),
+                        WIDTH+10, randomNum, 15, 45, player.getScore(), 13));
+            }
+            missileStartTimer = System.nanoTime();
+        }
+        //update every missile object
+        for(int i=0; i<missiles.size(); i++) {
+            missiles.get(i).update();
+            //collision detection of helicopter and missile
+            if(collision(player, missiles.get(i))) {
+                //eplosion
+                explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
+                        player.getX()+30, player.getY()-30,100,100,25,boomBitmap);
+                missiles.remove(i);
+
+                destroy();
+
+                break;
+            }
+            if(missiles.get(i).getX()<-60) {
+                missiles.set(i,null);
+                missiles.remove(i);
+            }
+        }
+    }
+
+    public void createAndUpdateBottomBorder() {
+        //there is no border yet
+        if(bottomWalls.size()==0) {
+            bottomWalls.add(new BottomWall(BitmapFactory.decodeResource(getResources(),R.drawable.brick),
                     -10,HEIGHT-30, 30));
         }
-        else if(bottomBorders.get(bottomBorders.size()-1).getX() < WIDTH+40)
-            bottomBorders.add(new BottomBorder(BitmapFactory.decodeResource(getResources(),R.drawable.brick),
-                    bottomBorders.get(bottomBorders.size()-1).getX()+20,HEIGHT-30,30));
-        //Log.d("bottomwall","before delete size="+bottomBorders.size());
-        for(int i=0; i<bottomBorders.size(); i++) {
-            bottomBorders.get(i).update();
-            if(collision(player, bottomBorders.get(i))) {
+        //their is border created, lets create new one behind it
+        else if(bottomWalls.get(bottomWalls.size()-1).getX() < WIDTH+40)
+            bottomWalls.add(new BottomWall(BitmapFactory.decodeResource(getResources(),R.drawable.brick),
+                    bottomWalls.get(bottomWalls.size()-1).getX()+20,HEIGHT-30,30));
+
+        for(int i = 0; i< bottomWalls.size(); i++) {
+            bottomWalls.get(i).update();
+            if(collision(player, bottomWalls.get(i))) {
                 //eplosion
                 explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
                         player.getX()+20, player.getY()-30,100,100,25,boomBitmap);
                 destroy();
             }
-            if(bottomBorders.get(i).getX()<-20) {
-                bottomBorders.set(i,null);
-                bottomBorders.remove(i);
+            if(bottomWalls.get(i).getX()<-20) {
+                bottomWalls.set(i,null);
+                bottomWalls.remove(i);
             }
         }
-        //Log.d("bottomwall","after delete size="+bottomBorders.size());
-        //Log.d("bottom","update "+bottomBorders.size());
     }
 
-    public void updateTopBorder() {
-        //Log.d("top","entry");
-        if(topBorders.size()==0) {
-            topBorders.add(new TopBorder(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
+    public void createAndUpdateTopBorder() {
+        //there is no border yet
+        if(topWall.size()==0) {
+            topWall.add(new TopWall(BitmapFactory.decodeResource(getResources(), R.drawable.brick),
                     -10, 0, 30));
         }
-        else if(topBorders.get(topBorders.size()-1).getX() < WIDTH+40)
-            topBorders.add(new TopBorder(BitmapFactory.decodeResource(getResources(),R.drawable.brick),
-                    topBorders.get(topBorders.size()-1).getX()+20,0, 30));
-        //Log.d("topwall","before delete size="+topBorders.size());
-        for(int i=0; i<topBorders.size(); i++) {
-            topBorders.get(i).update();
-            if(collision(player, topBorders.get(i))) {
+        //there is border, lets create behind it
+        else if(topWall.get(topWall.size()-1).getX() < WIDTH+40)
+            topWall.add(new TopWall(BitmapFactory.decodeResource(getResources(),R.drawable.brick),
+                    topWall.get(topWall.size()-1).getX()+20,0, 30));
+
+        for(int i = 0; i< topWall.size(); i++) {
+            topWall.get(i).update();
+            if(collision(player, topWall.get(i))) {
                 //eplosion
                 explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
                         player.getX()+20, player.getY()-20,100,100,25,boomBitmap);
                 destroy();
             }
-            //Log.d("topwall","x="+topBorders.get(i).getX());
-            if(topBorders.get(i).getX()<-40) {
-                topBorders.set(i,null);
-                topBorders.remove(topBorders.get(i));
+            if(topWall.get(i).getX()<-40) {
+                topWall.set(i,null);
+                topWall.remove(topWall.get(i));
             }
         }
-        //Log.d("topwall","after delete size="+topBorders.size());
-        //Log.d("top","exit "+topBorders.size());
     }
 
     public boolean isGameOver() {
@@ -580,12 +571,12 @@ public class GamePanel extends GLSurfaceView implements SurfaceHolder.Callback {
         this.missiles = missiles;
     }
 
-    public ArrayList<TopBorder> getTopBorders() {
-        return topBorders;
+    public ArrayList<TopWall> getTopWall() {
+        return topWall;
     }
 
-    public ArrayList<BottomBorder> getBottomBorders() {
-        return bottomBorders;
+    public ArrayList<BottomWall> getBottomWalls() {
+        return bottomWalls;
     }
 
     public boolean isGamePaused() {

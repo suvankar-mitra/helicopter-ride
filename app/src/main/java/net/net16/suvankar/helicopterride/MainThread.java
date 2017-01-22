@@ -10,7 +10,7 @@ import java.io.Serializable;
  */
 
 public class MainThread extends Thread implements Serializable{
-    private int FPS = 40;
+    private int FPS = 35;
     private double averagFPS;
     private SurfaceHolder surfaceHolder;
     private GamePanel gamePanel;
@@ -41,7 +41,12 @@ public class MainThread extends Thread implements Serializable{
             canvas = null;
             //try to lock the canvas for pixel editing
             try {
-                canvas = surfaceHolder.lockCanvas();
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    canvas = surfaceHolder.getSurface().lockHardwareCanvas();
+                }
+                else {*/
+                    canvas = surfaceHolder.lockCanvas();
+                //}
                 synchronized (surfaceHolder) {
                     //heart of the game
                     this.gamePanel.update();

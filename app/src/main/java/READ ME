@@ -1,11 +1,19 @@
 CARTOONY.wav <- https://www.partnersinrhyme.com/pir/free_music_loops.shtml
 landscape.png <- http://opengameart.org/content/seamless-hd-landscape-in-parts
 
-
+Interstitial
+-------------
 App ID: ca-app-pub-1300395620912543~6143221316
 Ad unit ID: ca-app-pub-1300395620912543/7619954511
 
+Banner
+-------
+App ID: ca-app-pub-1300395620912543~6143221316
+Ad unit ID: ca-app-pub-1300395620912543/4747213311
 
+
+Git
+------------------
 Git global setup
 
 git config --global user.name "Suvankar Mitra"

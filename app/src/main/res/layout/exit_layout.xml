@@ -14,20 +14,10 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:id="@+id/imageView2"
-        android:paddingBottom="50dp"/>
-
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/yes"
-        android:id="@+id/yesButton"
-        android:background="@android:color/transparent"
-        android:paddingRight="17dp"
-        android:layout_below="@+id/imageView2"
-        android:layout_alignRight="@+id/imageView2"
-        android:layout_alignEnd="@+id/imageView2"
-        android:paddingTop="10dp"
-        android:onClick="quitGame"/>
+        android:paddingBottom="50dp"
+        android:scaleType="fitCenter"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"/>
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -36,9 +26,22 @@
         android:id="@+id/noButton"
         android:background="@android:color/transparent"
         android:paddingLeft="20dp"
-        android:layout_below="@+id/imageView2"
-        android:layout_alignLeft="@+id/imageView2"
-        android:layout_alignStart="@+id/imageView2"
         android:paddingTop="10dp"
-        android:onClick="backToGame"/>
+        android:onClick="backToGame"
+        android:layout_alignBottom="@+id/yesButton"
+        android:layout_alignLeft="@+id/imageView2"
+        android:layout_alignStart="@+id/imageView2"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/yes"
+        android:id="@+id/yesButton"
+        android:background="@android:color/transparent"
+        android:paddingRight="17dp"
+        android:paddingTop="10dp"
+        android:onClick="quitGame"
+        android:layout_below="@+id/imageView2"
+        android:layout_alignRight="@+id/imageView2"
+        android:layout_alignEnd="@+id/imageView2"/>
 </RelativeLayout>

@@ -13,7 +13,7 @@ import android.util.Log;
 public class Player extends GameObject{
     private int score;
     private int hiscore;    //this will not be deleted even if the activity gets killed
-    private int level;
+    private int level = 1;
     private int oldLevel = 1;
     private int fuelGauge;
     private final int MAX_FUEL = 200;
@@ -23,10 +23,10 @@ public class Player extends GameObject{
     private Animation animation = new Animation();
     private long startTime;
     private boolean gameOver = false;
-    private float dyChange = 0.4f;
+    private float dyChange = 0.35f;
     private final int FUEL_X = 12;
     private final int FUEL_Y = 32;
-    private int fuelEmptyRate = -2;
+    private float fuelEmptyRate = -2;
     private boolean levelUp = false;
     private Bitmap levelUpBitmap;
     public static final int X = 100;
@@ -59,45 +59,45 @@ public class Player extends GameObject{
 
         //set the level
         level = score / 100 + 1;
+        //when level is changing
         if(level - oldLevel>0) {
             levelUp = true;
             oldLevel = level;
             Log.d("LEVEL","Level:OldLevel="+level+":"+oldLevel);
-        }
-
-        switch (level) {
-            case 1:
-                dyChange = 0.4f;
-                fuelEmptyRate = -2;
-                break;
-            case 2:
-                dyChange = 0.45f;
-                fuelEmptyRate = -3;
-                break;
-            case 3:
-                dyChange = 0.5f;
-                fuelEmptyRate = -4;
-                break;
-            case 4:
-                dyChange = 0.55f;
-                fuelEmptyRate = -5;
-                break;
-            case 5:
-                dyChange = 0.6f;
-                fuelEmptyRate = -6;
-                break;
-            case 6:
-                dyChange = 0.65f;
-                fuelEmptyRate = -7;
-                break;
-            case 7:
-                dyChange = 0.7f;
-                fuelEmptyRate = -7;
-                break;
-            default:
-                dyChange = 0.75f;
-                fuelEmptyRate = -7;
-                break;
+            switch (level) {
+                case 1:
+                    dyChange = 0.35f;
+                    fuelEmptyRate = -2;
+                    break;
+                case 2:
+                    dyChange = 0.4f;
+                    fuelEmptyRate = -2.5f;
+                    break;
+                case 3:
+                    dyChange = 0.45f;
+                    fuelEmptyRate = -3;
+                    break;
+                case 4:
+                    dyChange = 0.5f;
+                    fuelEmptyRate = -3.5f;
+                    break;
+                case 5:
+                    dyChange = 0.55f;
+                    fuelEmptyRate = -4;
+                    break;
+                case 6:
+                    dyChange = 0.6f;
+                    fuelEmptyRate = -5f;
+                    break;
+                case 7:
+                    dyChange = 0.65f;
+                    fuelEmptyRate = -6f;
+                    break;
+                default:
+                    dyChange = 0.7f;
+                    fuelEmptyRate = -7f;
+                    break;
+            }
         }
 
         //update the animation of bitmap -- helicopter
@@ -147,11 +147,12 @@ public class Player extends GameObject{
         paint.setStrokeWidth(0);
         canvas.drawRect(FUEL_X, FUEL_Y, FUEL_X + fuelGauge, FUEL_Y + 10, paint);
 
+        //canvas.drawBitmap(levelUpBitmap, GamePanel.WIDTH/2 - 50, GamePanel.HEIGHT/2, null);
         //show level up whem level up happens
         if(levelUp) {
             levelUpShowTimerCount ++;
             if(levelUpShowTimerCount < 50) {    //then level up msg will be showing only for 50 iteration of draw method
-                canvas.drawBitmap(levelUpBitmap, GamePanel.WIDTH/2 - 100, GamePanel.HEIGHT/2, null);
+                canvas.drawBitmap(levelUpBitmap, GamePanel.WIDTH/2 - 50, GamePanel.HEIGHT/2, null);
             }
             else {
                 levelUp = false;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_game"
     android:layout_width="match_parent"
@@ -14,11 +14,12 @@
     tools:context="net.net16.suvankar.helicopterride.GameActivity">
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:src="@drawable/helicopter_ride"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
+        android:scaleType="fitCenter"
         android:id="@+id/imageView"/>
 
     <TextView
@@ -36,36 +37,60 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:src="@drawable/reset"
+        android:id="@+id/imageButton2"
+        android:background="@android:color/transparent"
+        android:onClick="resetGame"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:paddingLeft="10dp"
+        android:paddingTop="10dp"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/stats"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/imageButton3"
+        android:background="@android:color/transparent"
+        android:paddingRight="10dp"
+        android:paddingTop="10dp"
+        android:onClick="showStats"/>
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        ads:adSize="SMART_BANNER"
+        ads:adUnitId="@string/banner_ad_unit_id"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true">
+    </com.google.android.gms.ads.AdView>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:src="@drawable/credit"
         android:id="@+id/imageButton"
         android:background="@android:color/transparent"
-        android:padding="10dp"
-        android:layout_alignParentTop="true"
+        android:onClick="showCredit"
+        android:paddingBottom="10dp"
+        android:layout_above="@+id/imageButton2"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:onClick="getCredit"/>
+        android:layout_alignParentEnd="true"/>
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_volume_up_black"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
+        android:src="@drawable/music_on"
         android:id="@+id/muteBtn"
         android:background="@android:color/transparent"
         android:onClick="changeVolume"
-        android:padding="2dp"/>
-
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_restore"
-        android:id="@+id/imageButton2"
-        android:background="@android:color/transparent"
-        android:padding="2dp"
-        android:onClick="resetGame"
-        android:layout_alignParentBottom="true"
+        android:paddingBottom="10dp"
+        android:layout_above="@+id/imageButton3"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"/>
 
