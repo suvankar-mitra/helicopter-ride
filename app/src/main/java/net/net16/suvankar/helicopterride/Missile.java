@@ -17,12 +17,11 @@ public class Missile extends GameObject {
     private Animation animation;
     private Bitmap spritesheet;
     private int BASE_SPEED = 5;
-    public Missile(Bitmap res, int x, int y, int h, int w, int s, int numFrame) {
+    public Missile(Bitmap[] res, int x, int y, int h, int w, int s) {
         super.x = x;
         super.y = y;
         super.width = w;
         super.height = h;
-        this.spritesheet = res;
         this.score = s;
 
         random = new Random();
@@ -31,12 +30,7 @@ public class Missile extends GameObject {
 
         //cap the speed
         if(speed>=20)   speed = 20;
-        Bitmap[] image = new Bitmap[numFrame];
-        for(int i=0; i<image.length; i++) {
-            image[i] = Bitmap.createBitmap(spritesheet, 0, i*height, width, height);
-        }
-
-        animation.setFrames(image);
+        animation.setFrames(res);
         animation.setDelay(100 - speed);
     }
 

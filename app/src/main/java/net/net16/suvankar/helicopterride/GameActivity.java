@@ -96,8 +96,6 @@ public class GameActivity extends Activity {
 
         //Banner Ad
         mAdView = (AdView) findViewById(R.id.adView);
-        //mAdView.setAdUnitId(getResources().getString(R.string.banner_ad_unit_id));
-        //mAdView.setAdSize(AdSize.);
         mAdView.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {

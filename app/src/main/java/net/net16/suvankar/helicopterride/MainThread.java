@@ -1,6 +1,8 @@
 package net.net16.suvankar.helicopterride;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.io.Serializable;
@@ -12,7 +14,7 @@ import java.io.Serializable;
 public class MainThread extends Thread implements Serializable{
     private int FPS = 35;
     private double averagFPS;
-    private SurfaceHolder surfaceHolder;
+    private final SurfaceHolder surfaceHolder;
     private GamePanel gamePanel;
     private boolean running;
     public static Canvas canvas;
@@ -41,16 +43,14 @@ public class MainThread extends Thread implements Serializable{
             canvas = null;
             //try to lock the canvas for pixel editing
             try {
-                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    canvas = surfaceHolder.getSurface().lockHardwareCanvas();
-                }
-                else {*/
-                    canvas = surfaceHolder.lockCanvas();
-                //}
+                canvas = surfaceHolder.lockCanvas();
                 synchronized (surfaceHolder) {
                     //heart of the game
                     this.gamePanel.update();
                     this.gamePanel.draw(canvas);
+                    if(!gamePanel.getPlayer().isPlaying()) {
+                        canvas.drawColor(Color.TRANSPARENT);
+                    }
                 }
             } catch (Exception ex) {
 
@@ -75,7 +75,7 @@ public class MainThread extends Thread implements Serializable{
                 averagFPS = 1000/((totalTime/1000000)/frameCount);
                 frameCount = 0;
                 totalTime = 0;
-                //Log.d(TAG,"Average FPS: "+averagFPS);
+                Log.d(TAG,"Average FPS: "+averagFPS);
             }
         }
     }

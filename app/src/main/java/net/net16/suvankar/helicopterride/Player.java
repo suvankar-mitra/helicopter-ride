@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 
 /**
  * Created by suvankar on 11/1/17.
@@ -23,7 +22,7 @@ public class Player extends GameObject{
     private Animation animation = new Animation();
     private long startTime;
     private boolean gameOver = false;
-    private float dyChange = 0.35f;
+    private float dyChange = 0.2f;
     private final int FUEL_X = 12;
     private final int FUEL_Y = 32;
     private float fuelEmptyRate = -2;
@@ -63,39 +62,38 @@ public class Player extends GameObject{
         if(level - oldLevel>0) {
             levelUp = true;
             oldLevel = level;
-            Log.d("LEVEL","Level:OldLevel="+level+":"+oldLevel);
             switch (level) {
                 case 1:
-                    dyChange = 0.35f;
+                    dyChange = 0.2f;
                     fuelEmptyRate = -2;
                     break;
                 case 2:
-                    dyChange = 0.4f;
-                    fuelEmptyRate = -2.5f;
+                    dyChange = 0.25f;
+                    fuelEmptyRate = -2.3f;
                     break;
                 case 3:
-                    dyChange = 0.45f;
-                    fuelEmptyRate = -3;
+                    dyChange = 0.3f;
+                    fuelEmptyRate = -2.8f;
                     break;
                 case 4:
-                    dyChange = 0.5f;
-                    fuelEmptyRate = -3.5f;
+                    dyChange = 0.35f;
+                    fuelEmptyRate = -3.3f;
                     break;
                 case 5:
-                    dyChange = 0.55f;
-                    fuelEmptyRate = -4;
+                    dyChange = 0.4f;
+                    fuelEmptyRate = -3.8f;
                     break;
                 case 6:
-                    dyChange = 0.6f;
-                    fuelEmptyRate = -5f;
+                    dyChange = 0.45f;
+                    fuelEmptyRate = -4.3f;
                     break;
                 case 7:
-                    dyChange = 0.65f;
-                    fuelEmptyRate = -6f;
+                    dyChange = 0.5f;
+                    fuelEmptyRate = -4.8f;
                     break;
                 default:
-                    dyChange = 0.7f;
-                    fuelEmptyRate = -7f;
+                    dyChange = 0.55f;
+                    fuelEmptyRate = -5.3f;
                     break;
             }
         }
@@ -104,7 +102,7 @@ public class Player extends GameObject{
         animation.update();
 
         if(up) {
-            dy -= dyChange;
+            dy -= (dyChange+0.05f);
         }
         else {
             dy += dyChange;
@@ -179,16 +177,26 @@ public class Player extends GameObject{
 
     public void resetDy() {
         dy = 0;
-        dyChange = 0.5f;
+        dyChange = 0.2f;
+    }
+    
+    public void resetAll() {
+        this.resetDy();
+        this.resetY();
+        this.resetScore();
+        this.resetFuelGauge();
+        this.resetFuelGauge();
     }
 
     public void resetY() {
-        y = GamePanel.HEIGHT/2;
+        y = GamePanel.HEIGHT - (GamePanel.HEIGHT*3)/4;
     }
 
     public void resetScore() {
         score = 0;
     }
+    
+    public void resetFuelEmptyRate() { fuelEmptyRate = -2; }
 
     public boolean isGameOver() {
         return gameOver;

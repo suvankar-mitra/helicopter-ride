@@ -1,6 +1,7 @@
 package net.net16.suvankar.helicopterride;
 
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 
 import java.io.Serializable;
 
@@ -15,7 +16,7 @@ public class Animation implements Serializable{
     private long delay;
     private boolean playedOnce;
 
-    public void setFrames(Bitmap[] frames) {
+    public void setFrames(@NonNull Bitmap[] frames) {
         this.frames = frames;
         currentFrame = 0;
         startTime = System.nanoTime();
