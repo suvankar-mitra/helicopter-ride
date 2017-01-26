@@ -40,10 +40,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private Explosion explosion;
     private Fuel fuel;
 
-    private final Bitmap[] fuelBitmap = new Bitmap[] {
-            Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel_2, 107, 75),
-            Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel_3, 107, 75)
-    };
+    private final Bitmap fuelBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel, 107, 75);
+    private final Bitmap wallBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.brick); //Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.brick, BRICK_WALL_WIDTH,50);
     private Bitmap gameStartBitMap = BitmapFactory.decodeResource(getResources(),R.drawable.start_game);
     private Bitmap gameOverBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.game_over);
     private Bitmap boomBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.boom,187,52);
@@ -528,8 +526,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     private int bottomWallRemoveCount = 0;
     private final int bottomWallRemoveRate = 20000;
-    private final Bitmap wallBitmap = Utility.getBitmapFromVectorDrawable(getContext(),
-            R.drawable.brick_wall, BRICK_WALL_WIDTH,50);
     public void createAndUpdateBottomBorder() {
         //there is no border yet
         if(bottomWalls.size()==0) {
