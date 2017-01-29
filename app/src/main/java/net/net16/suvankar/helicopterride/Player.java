@@ -23,8 +23,8 @@ public class Player extends GameObject{
     private long startTime;
     private boolean gameOver = false;
     private float dyChange = 0.2f;
-    private final int FUEL_X = 12;
-    private final int FUEL_Y = 32;
+    private final int FUEL_X = 45;
+    private final int FUEL_Y = 10;
     private float fuelEmptyRate = -2;
     private boolean levelUp = false;
     private Bitmap levelUpBitmap;
@@ -39,7 +39,7 @@ public class Player extends GameObject{
         height = h;
         width = w;
         animation.setFrames(sprites);
-        animation.setDelay(10);
+        animation.setDelay(5);
         startTime = System.nanoTime();
         fuelGauge = MAX_FUEL;
         levelUpBitmap = levelUp;
@@ -62,40 +62,41 @@ public class Player extends GameObject{
         if(level - oldLevel>0) {
             levelUp = true;
             oldLevel = level;
-            switch (level) {
-                case 1:
-                    dyChange = 0.2f;
-                    fuelEmptyRate = -2;
-                    break;
-                case 2:
-                    dyChange = 0.25f;
-                    fuelEmptyRate = -2.3f;
-                    break;
-                case 3:
-                    dyChange = 0.3f;
-                    fuelEmptyRate = -2.8f;
-                    break;
-                case 4:
-                    dyChange = 0.35f;
-                    fuelEmptyRate = -3.3f;
-                    break;
-                case 5:
-                    dyChange = 0.4f;
-                    fuelEmptyRate = -3.8f;
-                    break;
-                case 6:
-                    dyChange = 0.45f;
-                    fuelEmptyRate = -4.3f;
-                    break;
-                case 7:
-                    dyChange = 0.5f;
-                    fuelEmptyRate = -4.8f;
-                    break;
-                default:
-                    dyChange = 0.55f;
-                    fuelEmptyRate = -5.3f;
-                    break;
-            }
+        }
+
+        switch (level) {
+            case 1:
+                dyChange = 0.2f;
+                fuelEmptyRate = -2;
+                break;
+            case 2:
+                dyChange = 0.25f;
+                fuelEmptyRate = -2.3f;
+                break;
+            case 3:
+                dyChange = 0.3f;
+                fuelEmptyRate = -2.8f;
+                break;
+            case 4:
+                dyChange = 0.35f;
+                fuelEmptyRate = -3.3f;
+                break;
+            case 5:
+                dyChange = 0.4f;
+                fuelEmptyRate = -3.8f;
+                break;
+            case 6:
+                dyChange = 0.45f;
+                fuelEmptyRate = -4.3f;
+                break;
+            case 7:
+                dyChange = 0.5f;
+                fuelEmptyRate = -4.8f;
+                break;
+            default:
+                dyChange = 0.55f;
+                fuelEmptyRate = -5.3f;
+                break;
         }
 
         //update the animation of bitmap -- helicopter

@@ -9,7 +9,7 @@ import java.io.Serializable;
  * Created by suvankar on 11/1/17.
  */
 
-public class Animation implements Serializable{
+public class Animation{
     private Bitmap[] frames;
     private int currentFrame;
     private long startTime;

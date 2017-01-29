@@ -11,7 +11,7 @@ import java.io.Serializable;
  * Created by suvankar on 11/1/17.
  */
 
-public class MainThread extends Thread implements Serializable{
+public class MainThread extends Thread {
     private int FPS = 35;
     private double averagFPS;
     private final SurfaceHolder surfaceHolder;
@@ -48,9 +48,9 @@ public class MainThread extends Thread implements Serializable{
                     //heart of the game
                     this.gamePanel.update();
                     this.gamePanel.draw(canvas);
-                    if(!gamePanel.getPlayer().isPlaying()) {
+                    /*if(!gamePanel.getPlayer().isPlaying()) {
                         canvas.drawColor(Color.TRANSPARENT);
-                    }
+                    }*/
                 }
             } catch (Exception ex) {
 
@@ -75,7 +75,7 @@ public class MainThread extends Thread implements Serializable{
                 averagFPS = 1000/((totalTime/1000000)/frameCount);
                 frameCount = 0;
                 totalTime = 0;
-                Log.d(TAG,"Average FPS: "+averagFPS);
+                //Log.d(TAG,"Average FPS: "+averagFPS);
             }
         }
     }

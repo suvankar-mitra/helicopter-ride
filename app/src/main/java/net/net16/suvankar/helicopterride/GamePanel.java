@@ -16,6 +16,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 
 import java.util.ArrayList;
@@ -33,21 +35,37 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private MainThread mainThread;
     private Background background;
     private Player player;
+
     private BackgroundMusic backgroundMusic;
+    private GameOverMusic gameOverMusic;
+    private HelicopterBlastSound blastSound;
+    private PointUpSound pointUpSound;
+
     private ArrayList<Missile> missiles;
     private ArrayList<TopWall> topWalls;
     private ArrayList<BottomWall> bottomWalls;
     private Explosion explosion;
     private Fuel fuel;
+    private final Context mContext = getContext();
 
-    private final Bitmap fuelBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.fuel, 107, 75);
-    private final Bitmap wallBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.brick); //Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.brick, BRICK_WALL_WIDTH,50);
+    private final Bitmap fuelBitmap = Utility.getBitmapFromVectorDrawable(mContext,R.drawable.fuel, 107, 75);
+    private Bitmap smallFuelBitmap = Utility.getBitmapFromVectorDrawable(mContext, R.drawable.fuel,60,40);
+    private final Bitmap wallBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.brick); //Utility.getBitmapFromVectorDrawable(mContext,R.drawable.brick, BRICK_WALL_WIDTH,50);
     private Bitmap gameStartBitMap = BitmapFactory.decodeResource(getResources(),R.drawable.start_game);
     private Bitmap gameOverBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.game_over);
-    private Bitmap boomBitmap = Utility.getBitmapFromVectorDrawable(getContext(),R.drawable.boom,187,52);
+    private Bitmap boomBitmap = Utility.getBitmapFromVectorDrawable(mContext,R.drawable.boom,77,28);
+    private Bitmap lifeBitmap = Utility.getBitmapFromVectorDrawable(mContext,R.drawable.life,25,25);
+    private Bitmap levelUpBitmap = Utility.getBitmapFromVectorDrawable(mContext,R.drawable.level_up,40, 30);
+    private Bitmap smallHelicopterBitmap = Utility.getBitmapFromVectorDrawable(mContext,R.drawable.helicopter_1,70,50);
 
     private Drawable pauseBtn;
     private Drawable playBtn;
+
+    //how many times the player can get hit before game over
+    private int life = 3;
+
+    //fuel count
+    //private int fuelCount = 0;
 
     private long missileStartTimer;
     private long gameStartTime;
@@ -66,6 +84,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private static final int FUEL_WIDTH = 55;
     private static final int FUEL_HEIGHT = 65;
     private static final int BRICK_WALL_WIDTH = 20;
+    private static final int MAX_FUEL_COUNT = 100;  //if fuel count (which increases by 4) reaches this, life will be incremented by 1
 
     private int DEV_WIDTH;
     private int DEV_HEIGHT;
@@ -119,7 +138,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         mainThread.start();
 
         //background music
-        backgroundMusic = new BackgroundMusic(getContext());
+        backgroundMusic = new BackgroundMusic(mContext);
+
+        //gameover music
+        gameOverMusic = new GameOverMusic(mContext);
+
+        //blast sound
+        blastSound = new HelicopterBlastSound(mContext);
+
+        //point up sound
+        pointUpSound = new PointUpSound(mContext);
 
         gameStartTime = System.nanoTime();
 
@@ -129,14 +157,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         //player
         Bitmap[] sprites = new Bitmap[5];
         for(int i=0; i<sprites.length;i++) {
-            sprites[i] = Utility.getBitmapFromVectorDrawable(getContext(), playerSvgs[i]);
+            sprites[i] = Utility.getBitmapFromVectorDrawable(mContext, playerSvgs[i], 192, 144);
         }
-        Bitmap levelUp = Utility.getBitmapFromVectorDrawable(getContext(), R.drawable.level_up, 114, 31);
+        Bitmap levelUp = Utility.getBitmapFromVectorDrawable(mContext, R.drawable.level_up_dialogue, 114, 31);
         player = new Player(PLAYER_WIDTH, PLAYER_HEIGHT, sprites, levelUp);
 
         //missiles
         for(int i=0; i<missileSVGs.length; i++) {
-            missileSprites[i] = Utility.getBitmapFromVectorDrawable(getContext(), missileSVGs[i],51,25);
+            missileSprites[i] = Utility.getBitmapFromVectorDrawable(mContext, missileSVGs[i],51,25);
         }
         missiles = new ArrayList<>();
         missileStartTimer = System.nanoTime();
@@ -160,9 +188,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             playBtn = getResources().getDrawable(R.drawable.ic_play);
 
         //update hi score from preferences - this will not be deleted even if the activity gets killed
-        this.getPlayer().setHiscore(getContext().getSharedPreferences(PREF,MODE_PRIVATE).getInt("HISCORE",MODE_PRIVATE));
+        this.getPlayer().setHiscore(mContext.getSharedPreferences(PREF,MODE_PRIVATE).getInt("HISCORE",MODE_PRIVATE));
         //update if it was mute last time
-        mute = getContext().getSharedPreferences(PREF, MODE_PRIVATE).getBoolean("MUTE",false);
+        mute = mContext.getSharedPreferences(PREF, MODE_PRIVATE).getBoolean("MUTE",false);
 
         if(gamePaused) {
             gamePaused = false;
@@ -170,7 +198,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 //after resume
                 //this codes are required to resume the game after onPause called from GameActivity
                 //to restore the state of game
-                SharedPreferences preferences = getContext().getSharedPreferences(PREF, MODE_PRIVATE);
+                SharedPreferences preferences = mContext.getSharedPreferences(PREF, MODE_PRIVATE);
                 this.getPlayer().setX(preferences.getInt("PLAYER_X",player.X));
                 this.getPlayer().setY(preferences.getInt("PLAYER_Y",HEIGHT/2));
                 this.getPlayer().setDx(preferences.getFloat("PLAYER_DX",0));
@@ -225,6 +253,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 if(!mute) {
                     if(backgroundMusic.isPlaying())
                         backgroundMusic.pause();
+                    else backgroundMusic.play();
                 }
                 Log.d("PAUSE","true");
 
@@ -233,15 +262,26 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
 
-            //if this is first time pressing just increment
+            //if this is the first time pressing just increment
             if(gameOver && touchCount<1){
                 touchCount++;
                 gameOver = true;
                 gameStarted = false;    //this is to show the Start Game image at the start
 
                 //showing AD
-                if(mInterstitialAd.isLoaded()) {
-                    Log.d("AD","Showing AD after destroy");
+                if(mInterstitialAd == null) {
+                    mInterstitialAd = new InterstitialAd(mContext);
+                    mInterstitialAd.setAdUnitId(getResources().getString(R.string.interstitial_ad_unit_id));
+                    mInterstitialAd.setAdListener(new AdListener() {
+                        @Override
+                        public void onAdClosed() {
+                            requestNewInterstitial();
+                        }
+                    });
+                }
+
+                if(mInterstitialAd!=null && mInterstitialAd.isLoaded()) {
+                    Log.d("AD","Showing AD after destroyAndGameOver");
                     mInterstitialAd.show();
                 }
             }
@@ -252,13 +292,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     gameStarted = true;
                     if(gameOver)
                         resetGame();
+                    //start background music
+                    if(!mute) {
+                        if (!backgroundMusic.isPlaying()) {
+                            backgroundMusic.play();
+                        }
+                    }
                 }
                 else {
                     player.setUp(true);
                 }
-                //start background music
-                if(!mute)
-                    backgroundMusic.play();
             }
             //first time game starting
             else if(!gameOver) {
@@ -270,9 +313,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     player.setUp(true);
                 }
                 //start background music
-                if(!mute)
-                    backgroundMusic.play();
+                if(!mute) {
+                    if (!backgroundMusic.isPlaying()) {
+                        backgroundMusic.play();
+                    }
+                }
             }
+            //if player is not visible, make it visible
+            if(dissappear)
+                dissappear = false;
+
             return true;    //we handled the touch event
         }
         //releasing touch
@@ -282,6 +332,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         return super.onTouchEvent(event);
+    }
+
+    //AdMob Interstitial Ad
+    private void requestNewInterstitial() {
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice("18A6E611855D359A4B85D031E94D424B")
+                .build();
+        mInterstitialAd.loadAd(adRequest);
     }
 
     //resetGame the game when game is over
@@ -294,6 +352,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         topWalls.clear();
         bottomWalls.clear();
         missiles.clear();
+        life = 3;
+        //fuelCount = 0;
     }
 
     //update the canvas for each game loop
@@ -303,13 +363,21 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             //update background
             background.update();
 
-            //destroy the player if fuel tank is empty
+            //destroyAndGameOver the player if fuel tank is empty
             if(player.getFuelGauge() == 0) {
-                //eplosion
-                explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
-                        player.getX()+30, player.getY()-30,100,100,25,boomBitmap);
-                destroy();
-                fuel = null;
+                life--;
+                if(life == 0) {
+                    destroyAndGameOver();
+                }
+                else {
+                    //pause the game
+                    player.setPlaying(false);
+                    gameStarted = false;
+                    player.resetY();
+                    player.resetDy();
+                    player.resetFuelGauge();
+                    missiles.clear();
+                }
             }
 
             //update player
@@ -330,7 +398,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
             //if player got the fuel
             if(collision(player, fuel)) {
-                Log.d("FUEL","got fuel");
+                if(!mute)
+                    pointUpSound.play();
+                //Log.d("FUEL","got fuel");
                 int randomNum = random.nextInt(HEIGHT-100) + 45;
                 fuel = new Fuel(WIDTH, randomNum, FUEL_WIDTH, FUEL_HEIGHT, fuelBitmap);
                 player.setFuelGauge(player.getFuelGauge() + Player.FUEL_INCREASE);
@@ -338,7 +408,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             //create missiles
             createAndUpdateMissiles();
-
             //udate top border
             createAndUpdateTopBorder();
             //update bottom border
@@ -346,8 +415,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         //explosion update
-        if(explosion!=null)
+        if(explosion!=null) {
             explosion.update();
+        }
     }
 
     @Override
@@ -402,12 +472,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 playBtn.setBounds(WIDTH-70, HEIGHT-70, WIDTH-5, HEIGHT-5);
                 playBtn.draw(canvas);
             }
+
             if(gameOver && !player.isPlaying() && gameStarted) {
                 canvas.drawBitmap(gameOverBitmap, WIDTH/2 - 240, HEIGHT/2 - 40, null);
             }
 
             if(!gameStarted) {
-                canvas.drawBitmap(gameStartBitMap, WIDTH/2 - 244, HEIGHT/2 - 44, null);
+                canvas.drawBitmap(gameStartBitMap, WIDTH/2 - 125, HEIGHT/2 - 30, null);
             }
 
             canvas.restoreToCount(savedState);      //if we dont restore, it will scale up n up n up
@@ -417,36 +488,45 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void drawScoreAndStats(Canvas canvas) {
         //score
         Paint paint = new Paint();
-        paint.setColor(Color.WHITE);
+        paint.setColor(Color.YELLOW);
         paint.setTextSize(20);
         paint.setAlpha(230);
         paint.setTypeface(Typeface.MONOSPACE);
         paint.setFakeBoldText(true);
-        canvas.drawText("Score: "+player.getScore(), WIDTH - 130, 20, paint);
+        canvas.drawText(" x"+player.getScore(), WIDTH - 130, 20, paint);
+        canvas.drawBitmap(smallHelicopterBitmap,WIDTH-180, 2, null);
+
         //Fuel
-        paint = new Paint();
-        paint.setColor(Color.WHITE);
-        paint.setTextSize(20);
-        paint.setAlpha(230);
-        paint.setTypeface(Typeface.MONOSPACE);
-        paint.setFakeBoldText(true);
-        canvas.drawText("Fuel Meter", 10, 20, paint);
+        canvas.drawBitmap(smallFuelBitmap,10, 2, null);
+
         //level
         paint = new Paint();
-        paint.setColor(Color.WHITE);
+        paint.setColor(Color.YELLOW);
         paint.setTextSize(20);
         paint.setAlpha(230);
         paint.setTypeface(Typeface.MONOSPACE);
         paint.setFakeBoldText(true);
-        canvas.drawText("Level: "+player.getLevel(), 10, HEIGHT - 10, paint);
-        //hi score
+        canvas.drawText(" x"+player.getLevel(), (int)(WIDTH * 0.66), 20, paint);
+        canvas.drawBitmap(levelUpBitmap,(int)(WIDTH * 0.66) - 30,-1,null);
+
+        //Life
         paint = new Paint();
-        paint.setColor(Color.WHITE);
+        paint.setColor(Color.YELLOW);
         paint.setTextSize(20);
         paint.setAlpha(230);
         paint.setTypeface(Typeface.MONOSPACE);
         paint.setFakeBoldText(true);
-        canvas.drawText("Hi-Score: "+player.getHiscore(), WIDTH/2 - 55, 20, paint);
+        canvas.drawText(" x"+ life, WIDTH/2 - 5, 20, paint);
+        canvas.drawBitmap(lifeBitmap,WIDTH/2 - 25, 2,null);
+        //if(player.isPlaying()) {
+        /*paint = new Paint();
+        paint.setStrokeWidth(2);
+        paint.setColor(Color.BLACK);
+        canvas.drawRect(WIDTH/2 - 55 -2, 32 -2, WIDTH/2 - 55 + MAX_FUEL_COUNT + 2, 32 + 12, paint);
+        paint.setColor(Color.parseColor("#06b723"));
+        paint.setStrokeWidth(0);
+        canvas.drawRect(WIDTH/2 - 55, 32, WIDTH/2 - 55 + fuelCount, 32 + 10, paint);*/
+        //}
     }
 
     public boolean collision(GameObject a, GameObject b) {
@@ -456,23 +536,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         return false;
     }
 
-    public void destroy() {
-        player.setPlaying(false);
-        dissappear = true;
-        gameOver = true;
-        //to show the Start Game image at the start again
-        touchCount = 0;
-        //stop music
-        if(!mute)
-            backgroundMusic.pause();
-        //set hi score
-        setHiscore();
-
-        System.gc();
-    }
-
     private int missileCount=0;
-    private final int missileRemoveRate = 10000;
+    private final int missileRemoveRate = 50000;
     public void createAndUpdateMissiles() {
         long missileElapsed = (System.nanoTime() - missileStartTimer) / 1000000;
         if(missileElapsed > 2000 - player.getScore()) {
@@ -498,8 +563,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
                         player.getX()+30, player.getY()-30,100,100,25,boomBitmap);
                 iterator.remove();
-                destroy();
-                break;
+                life--;
+                if(life == 0) {
+                    destroyAndGameOver();
+                    break;
+                }
+                else {
+                    //pause the game
+                    destroyAndPause();
+                    break;
+                }
             }
             if(m.getX() < -60) {
                 missileCount++;
@@ -507,9 +580,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 //this deletion can happen on a new thread as this does not hamper the current thread
         if(missileCount > missileRemoveRate) {
-            new Thread(new Runnable() {
+            /*new Thread(new Runnable() {
                 @Override
-                public void run() {
+                public void run() {*/
                     ArrayList<Missile> missileArrayList = new ArrayList<>();
                     for(Missile m:missiles) {
                         if(m.getX()>= -60) {
@@ -519,13 +592,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     missiles = null;
                     missiles = missileArrayList;
                     missileCount = 0;
-                }
-            }).start();
+                /*}
+            }).start();*/
         }
     }
 
     private int bottomWallRemoveCount = 0;
-    private final int bottomWallRemoveRate = 20000;
+    private final int bottomWallRemoveRate = 100000;
     public void createAndUpdateBottomBorder() {
         //there is no border yet
         if(bottomWalls.size()==0) {
@@ -548,7 +621,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 //eplosion
                 explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
                         player.getX()+20, player.getY()-20,100,100,25,boomBitmap);
-                destroy();
+                life--;
+                if(life == 0) {
+                    destroyAndGameOver();
+                    break;
+                }
+                else {
+                    //pause the game
+                    destroyAndPause();
+                    //break;
+                }
             }
             if(bottom.getX() < -40) {
                 //iterator.remove();
@@ -557,9 +639,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             //this deletion can happen on a new thread as this does not hamper the current thread
             if(bottomWallRemoveCount > bottomWallRemoveRate) {
-                new Thread(new Runnable() {
+                /*new Thread(new Runnable() {
                     @Override
-                    public void run() {
+                    public void run() {*/
                         //Log.d("Bottom walls", "before size = "+bottomWalls.size());
                         ArrayList<BottomWall> walls = new ArrayList<>();
                         for(BottomWall t: bottomWalls){
@@ -571,14 +653,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         bottomWalls = walls;
                         bottomWallRemoveCount = 0;
                         //Log.d("Top walls", "after size = "+bottomWalls.size());
-                    }
-                }).start();
+                    /*}
+                }).start();*/
             }
         }
     }
 
     private int topBorderRemoveCount = 0;
-    private final int topWallRemoveRate = 20000;
+    private final int topWallRemoveRate = 100000;
     public void createAndUpdateTopBorder() {
         //there is no border yet
         if(topWalls.size()==0) {
@@ -596,7 +678,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 //eplosion
                 explosion = new Explosion(BitmapFactory.decodeResource(getResources(),R.drawable.explosion),
                         player.getX()+20, player.getY()-20,100,100,25,boomBitmap);
-                destroy();
+                life--;
+                if(life == 0) {
+                    destroyAndGameOver();
+                    break;
+                }
+                else {
+                    //pause the game
+                    destroyAndPause();
+                    //break;
+                    //fuelCount = 0;
+                }
             }
             if(top.getX() < -40) {
                 //iterator.remove();
@@ -605,9 +697,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
         //this deletion can happen on a new thread as this does not hamper the current thread
         if(topBorderRemoveCount > topWallRemoveRate) {
-            new Thread(new Runnable() {
+            /*new Thread(new Runnable() {
                 @Override
-                public void run() {
+                public void run() {*/
                     //Log.d("Top walls", "before size = "+topWalls.size());
                     int i=0;
                     ArrayList<TopWall> walls = new ArrayList<>();
@@ -619,11 +711,60 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     topWalls = null;
                     topWalls = walls;
                     topBorderRemoveCount = 0;
-                }
-            }).start();
+                /*}
+            }).start();*/
             //Log.d("Top walls", "after size = "+topWalls.size());
         }
 
+    }
+
+    public void destroyAndGameOver() {
+        Log.d("destroyAndGameOver","game over");
+        player.setPlaying(false);
+        player.resetY();
+        dissappear = true;
+        gameOver = true;
+        //to show the Start Game image at the start again
+        touchCount = 0;
+        //stop music
+        if(backgroundMusic.isPlaying()) {
+            backgroundMusic.pause();
+            Log.d("destroyAndGameOver","music pause");
+        }
+        if(!mute) {
+            Log.d("destroyAndGameOver","destroyAndGameOver play");
+            gameOverMusic.play();
+        }
+        //set hi score
+        setHiscore();
+        System.gc();
+
+        if(mInterstitialAd!=null) {
+            requestNewInterstitial();
+        }
+    }
+
+    private void destroyAndPause() {
+        //pause the game
+        player.setPlaying(false);
+        dissappear = true;
+        Log.d("destroyAndPause","clearing all lists");
+        //topWalls.clear();
+        //bottomWalls.clear();
+        missiles.clear();
+
+        //if it hits the wall reset the player coordinates
+        player.resetY();
+        player.resetDy();
+        player.resetFuelGauge();
+        if(!mute) {
+            backgroundMusic.pause();
+            blastSound.play();
+        }
+        //fuelCount = 0;
+        gameStarted = false;
+
+        setHiscore();
     }
 
     public boolean isGameOver() {
@@ -673,7 +814,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void setHiscore() {
         if(player.getScore() > player.getHiscore()) {
             player.setHiscore(player.getScore());
-
+            SharedPreferences preferences = mContext.getSharedPreferences(PREF, MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("HISCORE",player.getHiscore());
+            editor.commit();
         }
     }
 

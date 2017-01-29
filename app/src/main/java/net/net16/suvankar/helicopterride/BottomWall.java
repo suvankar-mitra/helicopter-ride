@@ -9,7 +9,7 @@ import java.io.Serializable;
  * Created by suvankar on 13/1/17.
  */
 
-public class BottomWall extends GameObject implements Serializable{
+public class BottomWall extends GameObject {
     private Bitmap image;
 
     public BottomWall(Bitmap res, int x, int y, int h) {

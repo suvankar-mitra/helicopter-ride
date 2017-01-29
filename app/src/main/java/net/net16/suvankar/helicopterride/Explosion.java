@@ -9,7 +9,7 @@ import java.io.Serializable;
  * Created by suvankar on 13/1/17.
  */
 
-public class Explosion implements Serializable{
+public class Explosion {
     private int x;
     private int y;
     private int width;
@@ -45,7 +45,7 @@ public class Explosion implements Serializable{
     public void draw(Canvas canvas) {
         if(!animation.isPlayedOnce()) {
             canvas.drawBitmap(animation.getImage(),x,y,null);
-            canvas.drawBitmap(boom,x+10, y+20, null);
+            canvas.drawBitmap(boom,x+20, y+10, null);
             //Log.d("collision","draw");
         }
     }

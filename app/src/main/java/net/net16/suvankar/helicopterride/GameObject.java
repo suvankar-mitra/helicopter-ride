@@ -8,7 +8,7 @@ import java.io.Serializable;
  * Created by suvankar on 11/1/17.
  */
 
-public abstract class GameObject implements Serializable{
+public abstract class GameObject {
     protected int x;
     protected int y;
     protected float dx;

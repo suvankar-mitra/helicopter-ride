@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1857583858-tr87i3gcda051e9qmrqsb84l0t4c8ob5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.net16.suvankar.helicopterride",
+            "certificate_hash": "754D09336ECABAE4D098D34B1983B20BEBB40EEC"
+          }
+        },
+        {
           "client_id": "1857583858-i6s3g1vmuk0n1mhrtiirougviltvu1if.apps.googleusercontent.com",
           "client_type": 3
         }

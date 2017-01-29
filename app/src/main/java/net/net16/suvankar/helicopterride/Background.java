@@ -9,7 +9,7 @@ import java.io.Serializable;
  * Created by suvankar on 11/1/17.
  */
 
-public class Background implements Serializable{
+public class Background {
 
     private Bitmap image;
     private int x;

@@ -4,13 +4,13 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/background"
+                android:background="@drawable/background_for_start_screen"
                 android:clickable="true">
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/background_image_credit"
+        android:src="@drawable/credit_for_bg_image"
         android:layout_below="@+id/imageView3"
         android:layout_centerHorizontal="true"
         android:id="@+id/imageView4"
@@ -19,7 +19,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/background_music_credit"
+        android:src="@drawable/credit_for_bg_music"
         android:layout_below="@+id/imageView4"
         android:layout_centerHorizontal="true"
         android:id="@+id/imageView5"

@@ -10,7 +10,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:background="@color/background"
+    android:background="@drawable/background_for_start_screen"
     tools:context="net.net16.suvankar.helicopterride.GameActivity">
 
     <ImageView
@@ -21,18 +21,6 @@
         android:layout_centerHorizontal="true"
         android:scaleType="fitCenter"
         android:id="@+id/imageView"/>
-
-    <TextView
-        android:text="@string/flash_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/flastText"
-        android:textSize="14sp"
-        android:typeface="monospace"
-        android:fontFamily="serif-monospace"
-        android:textColor="@android:color/holo_green_light"/>
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -56,7 +44,7 @@
         android:layout_alignParentStart="true"
         android:id="@+id/imageButton3"
         android:background="@android:color/transparent"
-        android:paddingRight="10dp"
+        android:paddingRight="20dp"
         android:paddingTop="10dp"
         android:onClick="showStats"/>
 
@@ -80,7 +68,8 @@
         android:paddingBottom="10dp"
         android:layout_above="@+id/imageButton2"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentEnd="true"
+        android:paddingLeft="10dp" />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -92,6 +81,43 @@
         android:paddingBottom="10dp"
         android:layout_above="@+id/imageButton3"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"/>
+        android:layout_alignParentStart="true"
+        android:paddingRight="10dp" />
+
+    <TextView
+        android:text="@string/flash_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/flastText"
+        android:textSize="14sp"
+        android:typeface="monospace"
+        android:fontFamily="serif-monospace"
+        android:textColor="@android:color/holo_green_light"
+        android:layout_below="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="8dp" />
+
+    <!--Future update: sign in to firebase-->
+    <!--<ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/sign_in"
+        android:id="@+id/signIn"
+        android:background="@android:color/transparent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/flastText"
+        android:layout_alignStart="@+id/flastText"
+        android:onClick="signIn"/>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/sign_out"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/flastText"
+        android:layout_alignEnd="@+id/flastText"
+        android:id="@+id/signOut"
+        android:background="@android:color/transparent"
+        android:onClick="signOut"/>-->
 
 </RelativeLayout>
