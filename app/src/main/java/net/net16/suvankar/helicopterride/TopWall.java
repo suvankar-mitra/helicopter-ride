@@ -20,7 +20,7 @@ public class TopWall extends GameObject {
     }
 
     public void update() {
-        x += dx;
+        //x += dx;
     }
 
     public void draw(Canvas canvas) {

@@ -1,18 +1,14 @@
 package net.net16.suvankar.helicopterride;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.util.Log;
 import android.view.SurfaceHolder;
-
-import java.io.Serializable;
 
 /**
  * Created by suvankar on 11/1/17.
  */
 
 public class MainThread extends Thread {
-    private int FPS = 35;
+    private int FPS = 30;
     private double averagFPS;
     private final SurfaceHolder surfaceHolder;
     private GamePanel gamePanel;
@@ -39,6 +35,12 @@ public class MainThread extends Thread {
         long targetTime = 1000/FPS;     //how much I want to take for each game loop to iterate
 
         while(running) {
+            if(!gamePanel.getPlayer().isPlaying()) {
+                FPS = 1;
+            }
+            else {
+                FPS = 35;
+            }
             startTime = System.nanoTime();
             canvas = null;
             //try to lock the canvas for pixel editing

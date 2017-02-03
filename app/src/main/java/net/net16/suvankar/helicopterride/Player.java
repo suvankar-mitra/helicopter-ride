@@ -15,7 +15,7 @@ public class Player extends GameObject{
     private int level = 1;
     private int oldLevel = 1;
     private int fuelGauge;
-    private final int MAX_FUEL = 200;
+    private final int MAX_FUEL = 250;
     public static final int FUEL_INCREASE = 60;
     private boolean up;     //up or down movement
     private boolean playing;
@@ -23,8 +23,8 @@ public class Player extends GameObject{
     private long startTime;
     private boolean gameOver = false;
     private float dyChange = 0.2f;
-    private final int FUEL_X = 45;
-    private final int FUEL_Y = 10;
+    private final int FUEL_X = 52;
+    private final int FUEL_Y = 15;
     private float fuelEmptyRate = -2;
     private boolean levelUp = false;
     private Bitmap levelUpBitmap;
@@ -33,7 +33,7 @@ public class Player extends GameObject{
 
     public Player(int w, int h, Bitmap[] sprites, Bitmap levelUp) {
         x = this.X;
-        y = GamePanel.HEIGHT - (GamePanel.HEIGHT*3)/4;
+        y = GamePanel.getmHeight() - (GamePanel.getmHeight() *3)/4;
         dy = 0;
         score = 0;
         height = h;
@@ -122,7 +122,7 @@ public class Player extends GameObject{
         }
 
         //game over
-        /*if(y<=0 || y>=(GamePanel.HEIGHT - 25)) {
+        /*if(y<=0 || y>=(GamePanel.mHeight - 25)) {
             playing = false;
             gameOver = true;
         }*/
@@ -136,7 +136,7 @@ public class Player extends GameObject{
         Paint paint = new Paint();
         paint.setStrokeWidth(2);
         paint.setColor(Color.BLACK);
-        canvas.drawRect(FUEL_X-2, FUEL_Y-2, FUEL_X + MAX_FUEL + 2, FUEL_Y + 12, paint);
+        canvas.drawRect(FUEL_X-2, FUEL_Y-2, FUEL_X + MAX_FUEL + 2, FUEL_Y + 17, paint);
         if(fuelGauge>=120)
             paint.setColor(Color.parseColor("#06b723"));
         else if(fuelGauge>=60)
@@ -144,14 +144,14 @@ public class Player extends GameObject{
         else
             paint.setColor(Color.RED);
         paint.setStrokeWidth(0);
-        canvas.drawRect(FUEL_X, FUEL_Y, FUEL_X + fuelGauge, FUEL_Y + 10, paint);
+        canvas.drawRect(FUEL_X, FUEL_Y, FUEL_X + fuelGauge, FUEL_Y + 15, paint);
 
-        //canvas.drawBitmap(levelUpBitmap, GamePanel.WIDTH/2 - 50, GamePanel.HEIGHT/2, null);
+        //canvas.drawBitmap(levelUpBitmap, GamePanel.mWidth/2 - 50, GamePanel.mHeight/2, null);
         //show level up whem level up happens
         if(levelUp) {
             levelUpShowTimerCount ++;
             if(levelUpShowTimerCount < 50) {    //then level up msg will be showing only for 50 iteration of draw method
-                canvas.drawBitmap(levelUpBitmap, GamePanel.WIDTH/2 - 50, GamePanel.HEIGHT/2, null);
+                canvas.drawBitmap(levelUpBitmap, GamePanel.getmWidth() /2 - 50, GamePanel.getmHeight() /2, null);
             }
             else {
                 levelUp = false;
@@ -190,7 +190,7 @@ public class Player extends GameObject{
     }
 
     public void resetY() {
-        y = GamePanel.HEIGHT - (GamePanel.HEIGHT*3)/4;
+        y = GamePanel.getmHeight() - (GamePanel.getmHeight() *3)/4;
     }
 
     public void resetScore() {

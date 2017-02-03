@@ -18,6 +18,7 @@ public class Explosion {
     private Bitmap spritesheet;
     private int row = 0;
     private Bitmap boom;
+    private boolean playedOnce =false;
 
     public Explosion(Bitmap res, int x, int y, int w, int h, int numFrames, Bitmap boom){
         animation = new Animation();
@@ -40,6 +41,9 @@ public class Explosion {
         if(!animation.isPlayedOnce()) {
             animation.update();
         }
+        else {
+            playedOnce = true;
+        }
     }
 
     public void draw(Canvas canvas) {
@@ -52,5 +56,9 @@ public class Explosion {
 
     public int getHeight() {
         return height;
+    }
+
+    public boolean isPlayedOnce() {
+        return playedOnce;
     }
 }

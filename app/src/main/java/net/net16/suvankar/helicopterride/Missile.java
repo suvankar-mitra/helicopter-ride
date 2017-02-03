@@ -47,7 +47,7 @@ public class Missile extends GameObject {
 
     @Override
     public int getWidth() {
-        //offset the width to make it realistic, like if helicopter collides with tail of missile
+        //offset the mWidth to make it realistic, like if helicopter collides with tail of missile
         //it should not explode
         return width - 10;
     }
